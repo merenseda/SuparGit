@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "496298322400",
+    "project_id": "supargit-5faff",
+    "storage_bucket": "supargit-5faff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:496298322400:android:b4ed4ae8ffaebb6e34a385",
+        "android_client_info": {
+          "package_name": "com.susluparantez.supargit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_peHSnrhNo_5Smn1VTb4MSJu4Ck1CTCk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
