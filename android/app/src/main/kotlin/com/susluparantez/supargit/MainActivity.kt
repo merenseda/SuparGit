@@ -1,4 +1,6 @@
-import 'package:flutter/embedding/android/FlutterActivity'
+package com.susluparantez.supargit
+
+import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity: FlutterActivity() {
 }
