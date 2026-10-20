@@ -9,8 +9,8 @@ from tkinter import filedialog, messagebox
 # ─── AYARLAR & SABİTLER ───────────────────────────────────────────────────────
 DEFAULT_API_URL = "https://git.susluparantez.com.tr/api"
 CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".gitpush_config.json")
-APP_VERSION = "1.0.1"
-APP_VERSION_CODE = 2
+APP_VERSION = "1.0.2"
+APP_VERSION_CODE = 3
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -19,7 +19,7 @@ class GitPushDesktopApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title(f"GitSüpar Desktop v{APP_VERSION} — Ekip Kolay Git Yükleme")
+        self.title("GitSüpar Desktop")
         self.geometry("860x650")
         self.minsize(740, 580)
 
@@ -242,6 +242,15 @@ del "%~f0"
         )
         btn_login.pack(pady=(10, 28), padx=30)
 
+        # Sol alt köşede küçük versiyon bilgisi
+        lbl_ver = ctk.CTkLabel(
+            self.main_container,
+            text=f"v{APP_VERSION}",
+            font=ctk.CTkFont(size=11),
+            text_color="#71717a"
+        )
+        lbl_ver.place(x=16, rely=1.0, y=-12, anchor="sw")
+
     def handle_login(self):
         email = self.entry_email.get().strip()
         password = self.entry_password.get().strip()
@@ -354,14 +363,10 @@ del "%~f0"
         header = ctk.CTkFrame(self.main_container, height=60, corner_radius=0, fg_color="#18181b")
         header.pack(fill="x")
 
-        u_name = self.user_data.get("name", "Kullanıcı") if self.user_data else ""
-        u_gh = self.user_data.get("github_username", "") if self.user_data else ""
-        gh_badge = f"(@{u_gh})" if u_gh else "(GitHub Bağlı Değil ⚠️)"
-
         lbl_user = ctk.CTkLabel(
             header,
-            text=f"🚀 GitSüpar — {u_name} {gh_badge}",
-            font=ctk.CTkFont(size=14, weight="bold")
+            text="GitSüpar Desktop",
+            font=ctk.CTkFont(size=16, weight="bold")
         )
         lbl_user.pack(side="left", padx=20, pady=15)
 
@@ -394,9 +399,21 @@ del "%~f0"
         )
         btn_gh.pack(side="right", padx=4)
 
+        # Alt Durum Çubuğu (Versiyon sol alt köşede)
+        footer = ctk.CTkFrame(self.main_container, height=26, corner_radius=0, fg_color="#18181b")
+        footer.pack(fill="x", side="bottom")
+
+        lbl_version = ctk.CTkLabel(
+            footer,
+            text=f"v{APP_VERSION}",
+            font=ctk.CTkFont(size=11),
+            text_color="#71717a"
+        )
+        lbl_version.pack(side="left", padx=16, pady=3)
+
         # Ana Gövde (Sol Form + Sağ Bildirim Listesi)
         body = ctk.CTkFrame(self.main_container, fg_color="transparent")
-        body.pack(fill="both", expand=True, padx=20, pady=16)
+        body.pack(fill="both", expand=True, padx=20, pady=(12, 6))
 
         # ─── Sol Panel: Push Formu ──────────────────
         left_panel = ctk.CTkFrame(body, corner_radius=12)
@@ -509,12 +526,14 @@ del "%~f0"
                 m_name = member.get("name", "Üye")
                 m_role = member.get("role", "developer")
 
+                self.selected_recipients.add(m_id)
                 cb = ctk.CTkCheckBox(
                     scroll_members,
                     text=f"{m_name} ({m_role})",
                     font=ctk.CTkFont(size=12),
                     command=lambda uid=m_id: self.toggle_recipient(uid)
                 )
+                cb.select()
                 cb.pack(anchor="w", padx=8, pady=6)
         else:
             lbl_none = ctk.CTkLabel(scroll_members, text="Ekip üyesi bulunamadı.", font=ctk.CTkFont(size=12), text_color="gray")

@@ -1,7 +1,7 @@
 ; GitSüpar Inno Setup Script
 #define MyAppName "GitSüpar"
-#define MyAppVersion "1.0.1"
-#define MyAppPublisher "Süslü Parantez"
+#define MyAppVersion "1.0.2"
+#define MyAppPublisher "Süpar"
 #define MyAppURL "https://git.susluparantez.com.tr"
 #define MyAppExeName "GitSupar.exe"
 
