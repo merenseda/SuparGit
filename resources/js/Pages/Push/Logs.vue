@@ -21,9 +21,6 @@ const statusBadge = (status) => status === 'success'
           <h3 class="font-bold text-gray-800 dark:text-white text-base">Tüm Gönderim Kayıtları</h3>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Ekip tarafından yapılan tüm push ve bildirim kayıtları</p>
         </div>
-        <Link href="/push" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow transition-colors">
-          + Yeni Push
-        </Link>
       </div>
       
       <div v-if="logs?.data?.length" class="overflow-x-auto">

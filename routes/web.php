@@ -44,9 +44,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/auth/github/callback', [GitHubAuthController::class, 'callback'])->name('github.callback');
     Route::delete('/auth/github', [GitHubAuthController::class, 'disconnect'])->name('github.disconnect');
 
-    // Push İşlemleri (Developer + Admin)
-    Route::get('/push', [PushController::class, 'index'])->name('push.index');
-    Route::post('/push', [PushController::class, 'push'])->name('push.store');
+    // Push Rotaları (Web üzerinden doğrudan push kaldırıldı, doğrudan loglara yönlendirilir)
+    Route::get('/push', fn() => redirect()->route('push.logs'))->name('push.index');
+    Route::post('/push', fn() => abort(403, 'Dosya push işlemleri yalnızca Masaüstü Uygulaması üzerinden yapılabilir.'))->name('push.store');
     Route::get('/push/branches', [PushController::class, 'getBranches'])->name('push.branches');
 
     // Push Logları (Herkese açık - viewer da görebilir)

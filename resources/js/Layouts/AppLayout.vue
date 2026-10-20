@@ -7,9 +7,8 @@ const sidebarOpen = ref(false);
 
 const navigation = [
   { name: 'Gösterge Paneli', href: '/dashboard', icon: '🏠' },
-  { name: 'Dosya Push Et', href: '/push', icon: '🚀' },
   { name: 'Push Geçmişi', href: '/push/logs', icon: '📜' },
-  { name: 'Profil', href: '/profile', icon: '👤' },
+  { name: 'Hesap / Profil', href: '/profile', icon: '👤' },
 ];
 
 const adminNav = [

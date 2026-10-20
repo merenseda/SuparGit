@@ -25,24 +25,14 @@ const statusBadge = (status) => status === 'success'
       </div>
       
       <!-- Hızlı Eylem Kartları -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Link href="/push" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 flex items-center gap-4 hover:shadow-md hover:border-indigo-300 transition-all group">
-          <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
-            📤
-          </div>
-          <div>
-            <p class="font-bold text-gray-900 dark:text-white">Dosya Push Et</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">GitHub reposuna dosya yükle</p>
-          </div>
-        </Link>
-
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Link href="/push/logs" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 flex items-center gap-4 hover:shadow-md hover:border-emerald-300 transition-all group">
           <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
             📜
           </div>
           <div>
-            <p class="font-bold text-gray-900 dark:text-white">Push Geçmişi</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tüm commit logları ve diff linkleri</p>
+            <p class="font-bold text-gray-900 dark:text-white">Push Geçmişi & Diff</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Ekip tarafından yapılan tüm push kayıtları ve diff inceleme</p>
           </div>
         </Link>
 
@@ -51,8 +41,8 @@ const statusBadge = (status) => status === 'success'
             ⚙️
           </div>
           <div>
-            <p class="font-bold text-gray-900 dark:text-white">Profil & GitHub</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">GitHub hesabı & token yönetimi</p>
+            <p class="font-bold text-gray-900 dark:text-white">Hesap ve GitHub Bağlantısı</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Profil bilgileri, parola ve GitHub hesabı</p>
           </div>
         </Link>
       </div>
