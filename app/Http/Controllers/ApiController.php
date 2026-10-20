@@ -60,9 +60,73 @@ class ApiController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'notifications_enabled' => (bool) ($user->notifications_enabled ?? true),
             'github_connected' => !empty($user->github_token),
             'github_username' => $user->github_username,
             'github_avatar' => $user->github_avatar,
+        ]);
+    }
+
+    /**
+     * Kullanıcı Profilini Güncelle
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:6',
+            'notifications_enabled' => 'nullable|boolean',
+            'github_token' => 'nullable|string',
+        ]);
+
+        if (!empty($validated['name'])) {
+            $user->name = $validated['name'];
+        }
+        if (!empty($validated['email'])) {
+            $user->email = $validated['email'];
+        }
+        if (!empty($validated['password'])) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        }
+        if (isset($validated['notifications_enabled'])) {
+            $user->notifications_enabled = (bool) $validated['notifications_enabled'];
+        }
+        if (array_key_exists('github_token', $validated) && !empty($validated['github_token'])) {
+            $user->github_token = $validated['github_token'];
+            try {
+                $ghRes = \Illuminate\Support\Facades\Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $validated['github_token'],
+                    'Accept' => 'application/vnd.github+json',
+                ])->get('https://api.github.com/user');
+
+                if ($ghRes->ok()) {
+                    $ghData = $ghRes->json();
+                    $user->github_username = $ghData['login'] ?? null;
+                    $user->github_avatar = $ghData['avatar_url'] ?? null;
+                }
+            } catch (\Exception $e) {
+                // Sessizce devam et
+            }
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profil bilgileri başarıyla güncellendi.',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'notifications_enabled' => (bool) $user->notifications_enabled,
+                'github_connected' => !empty($user->github_token),
+                'github_username' => $user->github_username,
+                'github_avatar' => $user->github_avatar,
+            ],
         ]);
     }
 

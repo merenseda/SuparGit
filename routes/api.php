@@ -9,6 +9,8 @@ Route::post('/login', [ApiController::class, 'login']);
 // ─── Korumalı API Rotaları (Sanctum Token ile) ──────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ApiController::class, 'profile']);
+    Route::post('/profile', [ApiController::class, 'updateProfile']);
+    Route::put('/profile', [ApiController::class, 'updateProfile']);
     Route::get('/repos', [ApiController::class, 'repositories']);
     Route::get('/branches', [ApiController::class, 'branches']);
     Route::get('/team-members', [ApiController::class, 'teamMembers']);
