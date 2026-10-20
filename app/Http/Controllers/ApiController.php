@@ -141,15 +141,23 @@ class ApiController extends Controller
         if (!$user->github_token) {
             return response()->json([
                 'success' => false,
-                'message' => 'GitHub hesabınız henüz bağlı değil.',
+                'message' => 'GitHub hesabınız henüz bağlı değil. Lütfen Personal Access Token (PAT) girin.',
                 'repos' => [],
             ], 400);
         }
 
         $github = new GitHubService($user);
-        $repos = $github->getRepositories();
+        $result = $github->fetchRepositories();
 
-        $repoList = collect($repos)->map(fn($r) => [
+        if (!$result['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['error'],
+                'repos' => [],
+            ], 400);
+        }
+
+        $repoList = collect($result['repos'])->map(fn($r) => [
             'id' => $r['id'],
             'name' => $r['name'],
             'full_name' => $r['full_name'],

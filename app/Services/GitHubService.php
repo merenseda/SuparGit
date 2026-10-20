@@ -28,11 +28,13 @@ class GitHubService
     }
 
     /**
-     * Kullanıcının erişebildiği repoları listele
+     * Kullanıcının erişebildiği repoları durum bilgisi ile birlikte listele
      */
-    public function getRepositories(int $page = 1, int $perPage = 50): array
+    public function fetchRepositories(int $page = 1, int $perPage = 50): array
     {
-        if (!$this->token) return [];
+        if (!$this->token) {
+            return ['success' => false, 'error' => 'GitHub bağlantısı veya tokenı bulunamadı.', 'repos' => []];
+        }
 
         $response = Http::withHeaders($this->headers())
             ->get("{$this->baseUrl}/user/repos", [
@@ -43,11 +45,24 @@ class GitHubService
             ]);
 
         if ($response->failed()) {
-            Log::error('GitHub repos fetch failed', ['status' => $response->status()]);
-            return [];
+            $msg = $response->json()['message'] ?? 'GitHub ile bağlantı kurulamadı.';
+            if ($response->status() === 401) {
+                $msg = 'GitHub tokenının süresi dolmuş veya geçersiz. Lütfen tokenınızı yenileyin.';
+            }
+            Log::error('GitHub repos fetch failed', ['status' => $response->status(), 'msg' => $msg]);
+            return ['success' => false, 'error' => $msg, 'repos' => []];
         }
 
-        return $response->json();
+        return ['success' => true, 'repos' => $response->json()];
+    }
+
+    /**
+     * Kullanıcının erişebildiği repoları listele
+     */
+    public function getRepositories(int $page = 1, int $perPage = 50): array
+    {
+        $res = $this->fetchRepositories($page, $perPage);
+        return $res['success'] ? $res['repos'] : [];
     }
 
     /**
