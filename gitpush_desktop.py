@@ -9,8 +9,8 @@ from tkinter import filedialog, messagebox
 # ─── AYARLAR & SABİTLER ───────────────────────────────────────────────────────
 DEFAULT_API_URL = "https://git.susluparantez.com.tr/api"
 CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".gitpush_config.json")
-APP_VERSION = "1.0.2"
-APP_VERSION_CODE = 3
+APP_VERSION = "1.0.3"
+APP_VERSION_CODE = 4
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -22,6 +22,15 @@ class GitPushDesktopApp(ctk.CTk):
         self.title("GitSüpar Desktop")
         self.geometry("860x650")
         self.minsize(740, 580)
+
+        # Uygulama Pencere İkonu
+        base_dir = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+        icon_path = os.path.join(base_dir, "app_icon.ico")
+        if os.path.exists(icon_path):
+            try:
+                self.iconbitmap(icon_path)
+            except Exception:
+                pass
 
         self.api_url = DEFAULT_API_URL
         self.auth_token = None

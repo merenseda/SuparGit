@@ -1,6 +1,6 @@
 ; GitSüpar Inno Setup Script
 #define MyAppName "GitSüpar"
-#define MyAppVersion "1.0.2"
+#define MyAppVersion "1.0.3"
 #define MyAppPublisher "Süpar"
 #define MyAppURL "https://git.susluparantez.com.tr"
 #define MyAppExeName "GitSupar.exe"
@@ -13,6 +13,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+SetupIconFile=app_icon.ico
 
 ; Kullanıcı profiline kurulum (Yönetici izni gerektirmez, otomatik güncelleme sorunsuz çalışır)
 DefaultDirName={localappdata}\Programs\GitSupar
@@ -35,7 +36,7 @@ CloseApplications=yes
 RestartApplications=yes
 
 ; Denetim masası / Program ekle kaldır bilgileri
-UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayIcon={app}\app_icon.ico
 UninstallDisplayName={#MyAppName}
 
 [Languages]
@@ -47,11 +48,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "GitSupar.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app_icon.ico"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{app}\app_icon.ico"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
