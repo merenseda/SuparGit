@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl = 'https://git.susluparantez.com.tr/api';
-  static const String currentVersionName = '1.0.1';
-  static const int currentVersionCode = 2;
+  static const String currentVersionName = '1.0.2';
+  static const int currentVersionCode = 3;
 
   // Güncelleme Kontrolü
   static Future<Map<String, dynamic>?> checkUpdate() async {
