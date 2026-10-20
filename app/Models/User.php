@@ -16,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'allowed_branches',
         'github_token',
         'github_username',
         'github_avatar',
@@ -52,6 +53,30 @@ class User extends Authenticatable
     public function isViewer(): bool
     {
         return $this->role === 'viewer';
+    }
+
+    public function canPushToBranch(string $branch): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        $allowedStr = trim($this->allowed_branches ?? '');
+        if ($allowedStr === '' || $allowedStr === '*') {
+            return true;
+        }
+
+        $patterns = array_map('trim', explode(',', $allowedStr));
+        foreach ($patterns as $pattern) {
+            if ($pattern === '' || $pattern === '*') {
+                return true;
+            }
+            if (fnmatch($pattern, $branch) || strcasecmp($pattern, $branch) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function pushLogs()

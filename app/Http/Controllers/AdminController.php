@@ -25,6 +25,7 @@ class AdminController extends Controller
             'role' => $user->role,
             'github_username' => $user->github_username,
             'github_avatar' => $user->github_avatar,
+            'allowed_branches' => $user->allowed_branches ?: '*',
             'notifications_enabled' => (bool)$user->notifications_enabled,
             'created_at' => $user->created_at?->format('d.m.Y') ?? '-',
         ]);
@@ -33,22 +34,31 @@ class AdminController extends Controller
     }
 
     /**
-     * Kullanıcı rolünü güncelle
+     * Kullanıcı rolünü ve izin verilen branch'leri güncelle
      */
     public function updateRole(Request $request, User $user): RedirectResponse
     {
-        $request->validate([
-            'role' => ['required', Rule::in(['admin', 'developer', 'viewer'])],
+        $validated = $request->validate([
+            'role' => ['sometimes', 'required', Rule::in(['admin', 'developer', 'viewer'])],
+            'allowed_branches' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Kendisinin rolünü değiştiremesin
-        if ($user->id === Auth::id()) {
-            return back()->with('error', 'Kendi rolünüzü değiştiremezsiniz.');
+        // Kendisinin admin rolünü değiştiremesin
+        if (isset($validated['role']) && $user->id === Auth::id() && $validated['role'] !== 'admin') {
+            return back()->with('error', 'Kendi admin rolünüzü değiştiremezsiniz.');
         }
 
-        $user->update(['role' => $request->role]);
+        if (array_key_exists('allowed_branches', $validated)) {
+            $user->allowed_branches = $validated['allowed_branches'] ?: '*';
+        }
 
-        return back()->with('success', $user->name . ' kullanıcısının rolü "' . $request->role . '" olarak güncellendi.');
+        if (isset($validated['role'])) {
+            $user->role = $validated['role'];
+        }
+
+        $user->save();
+
+        return back()->with('success', $user->name . ' kullanıcısının yetkileri ve branch izinleri güncellendi.');
     }
 
     /**

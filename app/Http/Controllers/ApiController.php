@@ -60,6 +60,7 @@ class ApiController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'allowed_branches' => $user->isAdmin() ? '*' : ($user->allowed_branches ?: '*'),
             'notifications_enabled' => (bool) ($user->notifications_enabled ?? true),
             'github_connected' => !empty($user->github_token),
             'github_username' => $user->github_username,
@@ -176,9 +177,14 @@ class ApiController extends Controller
         $github = new GitHubService($user);
         $branches = $github->getBranches($request->owner, $request->repo);
 
+        if (!$user->isAdmin()) {
+            $branches = array_values(array_filter($branches, fn($b) => $user->canPushToBranch($b)));
+        }
+
         return response()->json([
             'success' => true,
             'branches' => $branches,
+            'allowed_branches' => $user->isAdmin() ? '*' : ($user->allowed_branches ?: '*'),
         ]);
     }
 
@@ -212,6 +218,14 @@ class ApiController extends Controller
         ]);
 
         $user = $request->user();
+
+        // Branch izin kontrolü (Admin hariç)
+        if (!$user->canPushToBranch($request->branch)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Bu branch'e ('{$request->branch}') dosya yükleme izniniz bulunmamaktadır. İzin verilen branch'ler: " . ($user->allowed_branches ?: '*'),
+            ], 403);
+        }
 
         if (!$user->github_token) {
             return response()->json(['success' => false, 'message' => 'GitHub hesabınız bağlı değil.'], 400);
