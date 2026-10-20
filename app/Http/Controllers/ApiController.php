@@ -327,11 +327,11 @@ class ApiController extends Controller
         $platform = $request->query('platform');
 
         $desktop = [
-            'version' => '1.0.1',
-            'version_code' => 2,
+            'version' => '1.0.2',
+            'version_code' => 3,
             'download_url' => url('/downloads/GitSupar.exe'),
             'setup_download_url' => url('/downloads/GitSupar-Setup.exe'),
-            'release_notes' => "• Yeni branch izinleri ve güvenlik kontrolleri\n• GitHub token hızlı yenileme ve bağlantı sihirbazı\n• Otomatik güncelleme desteği",
+            'release_notes' => "• Bildirim alıcıları varsayılan olarak seçili hale getirildi\n• Sadeleştirilmiş başlık ve sol alt köşe sürüm bilgisi\n• Otomatik güncelleme ve performans geliştirmeleri",
             'force_update' => false,
         ];
 
