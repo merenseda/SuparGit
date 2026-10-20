@@ -58,6 +58,33 @@ class ApiService {
     return null;
   }
 
+  // Profil Güncelle
+  static Future<Map<String, dynamic>> updateProfile({
+    String? name,
+    String? email,
+    String? password,
+    bool? notificationsEnabled,
+    String? githubToken,
+  }) async {
+    final Map<String, dynamic> body = {};
+    if (name != null && name.trim().isNotEmpty) body['name'] = name.trim();
+    if (email != null && email.trim().isNotEmpty) body['email'] = email.trim();
+    if (password != null && password.trim().isNotEmpty) body['password'] = password.trim();
+    if (notificationsEnabled != null) body['notifications_enabled'] = notificationsEnabled;
+    if (githubToken != null && githubToken.trim().isNotEmpty) body['github_token'] = githubToken.trim();
+
+    final res = await http.post(
+      Uri.parse('$baseUrl/profile'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    try {
+      return jsonDecode(res.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Sunucu yanıtı anlaşılamadı.'};
+    }
+  }
+
   // FCM Push Token Kaydı
   static Future<void> registerFcmToken(String fcmToken) async {
     await http.post(
