@@ -20,6 +20,94 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _fetchData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdate();
+    });
+  }
+
+  Future<void> _checkForUpdate() async {
+    final updateData = await ApiService.checkUpdate();
+    if (!mounted || updateData == null) return;
+
+    final remoteCode = updateData['version_code'] as int? ?? 1;
+    if (remoteCode > ApiService.currentVersionCode) {
+      _showUpdateDialog(updateData);
+    }
+  }
+
+  void _showUpdateDialog(Map<String, dynamic> updateData) {
+    showDialog(
+      context: context,
+      barrierDismissible: !(updateData['is_force'] == true),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.system_update_rounded, color: Color(0xFF818CF8), size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Yeni Güncelleme (${updateData['version'] ?? ''})',
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'GitSüpar için yeni bir sürüm yayınlandı. Yeniliklerden faydalanmak ve kesintisiz kullanmak için lütfen güncelleyin.',
+              style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 13, height: 1.4),
+            ),
+            if (updateData['release_notes'] != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF334155)),
+                ),
+                child: Text(
+                  updateData['release_notes'].toString(),
+                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          if (updateData['is_force'] != true)
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Daha Sonra', style: TextStyle(color: Color(0xFF94A3B8))),
+            ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.download_rounded, size: 18),
+            label: const Text('Şimdi Güncelle'),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final url = updateData['download_url']?.toString();
+              if (url != null) {
+                final uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _fetchData() async {

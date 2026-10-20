@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -363,10 +364,173 @@ class _ProfileScreenState extends State<ProfileScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
+          const SizedBox(height: 24),
+
+          // Sürüm ve Güncelleme Kartı
+          _buildAppVersionCard(),
           const SizedBox(height: 30),
         ],
       ),
     );
+  }
+
+  Widget _buildAppVersionCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF334155)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.info_outline_rounded, color: Color(0xFF818CF8), size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Uygulama Sürümü', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    SizedBox(height: 2),
+                    Text(
+                      'GitSüpar Mobil v${ApiService.currentVersionName} (Build ${ApiService.currentVersionCode})',
+                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _checkManualUpdate,
+              icon: const Icon(Icons.sync_rounded, size: 16, color: Color(0xFF818CF8)),
+              label: const Text('Güncellemeleri Denetle', style: TextStyle(color: Color(0xFF818CF8), fontSize: 13, fontWeight: FontWeight.w600)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF6366F1)),
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _checkManualUpdate() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🔍 Güncellemeler denetleniyor...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    final updateData = await ApiService.checkUpdate();
+    if (!mounted) return;
+
+    if (updateData == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Güncelleme sunucusuna erişilemedi.'),
+          backgroundColor: Colors.amber,
+        ),
+      );
+      return;
+    }
+
+    final remoteCode = updateData['version_code'] as int? ?? 1;
+    if (remoteCode > ApiService.currentVersionCode) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.system_update_rounded, color: Color(0xFF818CF8), size: 28),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Yeni Güncelleme (${updateData['version'] ?? ''})',
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'GitSüpar için yeni bir sürüm yayınlandı. Yeniliklerden faydalanmak ve kesintisiz kullanmak için lütfen güncelleyin.',
+                style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 13, height: 1.4),
+              ),
+              if (updateData['release_notes'] != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF334155)),
+                  ),
+                  child: Text(
+                    updateData['release_notes'].toString(),
+                    style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Daha Sonra', style: TextStyle(color: Color(0xFF94A3B8))),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: const Text('Şimdi Güncelle'),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final url = updateData['download_url']?.toString();
+                if (url != null) {
+                  final uri = Uri.parse(url);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ GitSüpar en güncel sürümünde! (v${ApiService.currentVersionName})'),
+          backgroundColor: Color(0xFF10B981),
+        ),
+      );
+    }
   }
 
   Widget _buildTextField({

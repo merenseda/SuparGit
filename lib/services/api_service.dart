@@ -4,6 +4,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl = 'https://git.susluparantez.com.tr/api';
+  static const String currentVersionName = '1.0.1';
+  static const int currentVersionCode = 2;
+
+  // Güncelleme Kontrolü
+  static Future<Map<String, dynamic>?> checkUpdate() async {
+    try {
+      final res = await http.get(
+        Uri.parse('$baseUrl/app-version?platform=android'),
+        headers: {'Accept': 'application/json'},
+      );
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (e) {
+      // offline or network error
+    }
+    return null;
+  }
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
