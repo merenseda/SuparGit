@@ -2,24 +2,24 @@ import os
 import sys
 import json
 import threading
-import tkinter as tk
-from tkinter import filedialog, messagebox
-import customtkinter as ctk
 import requests
+import customtkinter as ctk
+from tkinter import filedialog, messagebox
 
-ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("blue")
-
-CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".gitpush_config.json")
+# ─── AYARLAR & SABİTLER ───────────────────────────────────────────────────────
 DEFAULT_API_URL = "https://git.susluparantez.com.tr/api"
+CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".gitpush_config.json")
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
 
 class GitPushDesktopApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         self.title("GitSüpar Desktop — Ekip Kolay Git Yükleme")
-        self.geometry("780x620")
-        self.minsize(700, 560)
+        self.geometry("820x640")
+        self.minsize(720, 580)
 
         self.api_url = DEFAULT_API_URL
         self.auth_token = None
@@ -29,6 +29,7 @@ class GitPushDesktopApp(ctk.CTk):
         self.team_members = []
         self.selected_file_path = None
         self.selected_recipients = set()
+        self.repo_error = None
 
         self.load_local_config()
         self.create_widgets()
@@ -43,18 +44,15 @@ class GitPushDesktopApp(ctk.CTk):
             try:
                 with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    self.auth_token = data.get("token")
-                    self.api_url = data.get("api_url", DEFAULT_API_URL)
+                    self.auth_token = data.get("auth_token")
             except Exception:
-                pass
+                self.auth_token = None
 
-    def save_local_config(self):
+    def save_local_config(self, token):
+        self.auth_token = token
         try:
             with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-                json.dump({
-                    "token": self.auth_token,
-                    "api_url": self.api_url
-                }, f)
+                json.dump({"auth_token": token}, f)
         except Exception:
             pass
 
@@ -119,43 +117,30 @@ class GitPushDesktopApp(ctk.CTk):
 
         self.lbl_login_status.configure(text="Giriş yapılıyor...", text_color="#3b82f6")
 
-        def _req():
-            headers = {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "User-Agent": "GitPushDesktop/1.0"
-            }
+        def _login():
             try:
-                print(f"İstek gönderiliyor: {self.api_url}/login")
                 res = requests.post(
                     f"{self.api_url}/login",
                     json={"email": email, "password": password},
-                    headers=headers,
-                    timeout=15
+                    headers={"Accept": "application/json"},
+                    timeout=10
                 )
-                print(f"Yanıt kodu: {res.status_code}")
-                try:
-                    data = res.json()
-                except Exception:
-                    data = {"message": res.text or f"HTTP {res.status_code}"}
-
+                data = res.json()
                 if res.status_code == 200 and data.get("success"):
-                    self.auth_token = data.get("token")
+                    token = data.get("token")
+                    self.save_local_config(token)
                     self.user_data = data.get("user")
-                    self.save_local_config()
                     self.after(0, self.fetch_initial_data)
                 else:
-                    msg = data.get("message", "Giriş başarısız.")
-                    self.after(0, lambda m=msg: self.lbl_login_status.configure(text=m, text_color="#ef4444"))
+                    err_msg = data.get("message", "Giriş başarısız oldu.")
+                    self.after(0, lambda m=err_msg: self.lbl_login_status.configure(text=m, text_color="#ef4444"))
             except Exception as e:
-                import traceback
-                traceback.print_exc()
-                err_text = f"Hata: {str(e)[:45]}"
-                self.after(0, lambda t=err_text: self.lbl_login_status.configure(text=t, text_color="#ef4444"))
+                err_msg = "Bağlantı hatası: Sunucuya ulaşılamadı."
+                self.after(0, lambda m=err_msg: self.lbl_login_status.configure(text=m, text_color="#ef4444"))
 
-        threading.Thread(target=_req, daemon=True).start()
+        threading.Thread(target=_login, daemon=True).start()
 
-    # ─── VERİ YÜKLEME ────────────────────────────────────────────────────────
+    # ─── VERİLERİ YÜKLE (REPOLAR, EKİP ÜYELERİ) ──────────────────────────────
     def fetch_initial_data(self):
         self.clear_container()
 
@@ -174,9 +159,16 @@ class GitPushDesktopApp(ctk.CTk):
                 self.user_data = p_res.json()
 
                 # Repolar
-                r_res = requests.get(f"{self.api_url}/repos", headers=headers, timeout=12)
+                r_res = requests.get(f"{self.api_url}/repos", headers=headers, timeout=15)
                 if r_res.status_code == 200:
                     self.repos = r_res.json().get("repos", [])
+                    self.repo_error = None
+                else:
+                    self.repos = []
+                    try:
+                        self.repo_error = r_res.json().get("message", "GitHub repoları yüklenemedi.")
+                    except Exception:
+                        self.repo_error = "GitHub repoları yüklenemedi."
 
                 # Ekip üyeleri
                 t_res = requests.get(f"{self.api_url}/team-members", headers=headers, timeout=10)
@@ -190,6 +182,35 @@ class GitPushDesktopApp(ctk.CTk):
 
         threading.Thread(target=_fetch, daemon=True).start()
 
+    # ─── GITHUB TOKEN DIALOG ─────────────────────────────────────────────────
+    def open_github_token_dialog(self):
+        dialog = ctk.CTkInputDialog(
+            text="GitHub Personal Access Token (PAT) girin:\n(repo iznine sahip ghp_ veya gho_ token)",
+            title="GitHub Token Bağla / Güncelle"
+        )
+        token = dialog.get_input()
+        if token and token.strip():
+            self.save_github_token(token.strip())
+
+    def save_github_token(self, token):
+        headers = self.get_auth_headers()
+        try:
+            res = requests.post(
+                f"{self.api_url}/profile",
+                headers=headers,
+                json={"github_token": token},
+                timeout=15
+            )
+            data = res.json()
+            if res.status_code == 200 and data.get("success"):
+                messagebox.showinfo("Başarılı! 🎉", "GitHub hesabınız başarıyla bağlandı!\nRepolar yükleniyor...")
+                self.fetch_initial_data()
+            else:
+                err = data.get("message", "Token kaydedilemedi.")
+                messagebox.showerror("Hata", f"GitHub bağlantısı başarısız:\n{err}")
+        except Exception as e:
+            messagebox.showerror("Hata", f"Bağlantı hatası: {e}")
+
     # ─── ANA DASHBOARD & PUSH EKRANI ─────────────────────────────────────────
     def show_main_dashboard(self):
         self.clear_container()
@@ -200,21 +221,36 @@ class GitPushDesktopApp(ctk.CTk):
 
         u_name = self.user_data.get("name", "Kullanıcı") if self.user_data else ""
         u_gh = self.user_data.get("github_username", "") if self.user_data else ""
-        gh_badge = f"(@{u_gh})" if u_gh else "(GitHub Bağlı Değil)"
+        gh_badge = f"(@{u_gh})" if u_gh else "(GitHub Bağlı Değil ⚠️)"
 
         lbl_user = ctk.CTkLabel(
             header,
             text=f"🚀 GitSüpar — {u_name} {gh_badge}",
-            font=ctk.CTkFont(size=15, weight="bold")
+            font=ctk.CTkFont(size=14, weight="bold")
         )
         lbl_user.pack(side="left", padx=20, pady=15)
 
+        # Sağ Butonlar
         btn_logout = ctk.CTkButton(
-            header, text="Çıkış", width=70, height=32,
+            header, text="Çıkış", width=65, height=32,
             fg_color="#dc2626", hover_color="#b91c1c",
             command=self.logout
         )
-        btn_logout.pack(side="right", padx=20)
+        btn_logout.pack(side="right", padx=(6, 20))
+
+        btn_refresh = ctk.CTkButton(
+            header, text="🔄 Yenile", width=75, height=32,
+            fg_color="#374151", hover_color="#4b5563",
+            command=self.fetch_initial_data
+        )
+        btn_refresh.pack(side="right", padx=6)
+
+        btn_gh = ctk.CTkButton(
+            header, text="🔑 GitHub Token", width=110, height=32,
+            fg_color="#4f46e5", hover_color="#4338ca",
+            command=self.open_github_token_dialog
+        )
+        btn_gh.pack(side="right", padx=6)
 
         # Ana Gövde (Sol Form + Sağ Bildirim Listesi)
         body = ctk.CTkFrame(self.main_container, fg_color="transparent")
@@ -228,12 +264,37 @@ class GitPushDesktopApp(ctk.CTk):
         lbl_repo = ctk.CTkLabel(left_panel, text="1. Hedef Repo Seçin:", font=ctk.CTkFont(size=13, weight="bold"))
         lbl_repo.pack(anchor="w", padx=16, pady=(16, 4))
 
-        repo_names = [r["full_name"] for r in self.repos] if self.repos else ["Bağlı repo bulunamadı"]
-        self.combo_repo = ctk.CTkComboBox(
-            left_panel, values=repo_names, height=36,
-            command=self.on_repo_selected
-        )
-        self.combo_repo.pack(fill="x", padx=16, pady=(0, 10))
+        if self.repos:
+            repo_names = [r["full_name"] for r in self.repos]
+            self.combo_repo = ctk.CTkComboBox(
+                left_panel, values=repo_names, height=36,
+                command=self.on_repo_selected
+            )
+            self.combo_repo.pack(fill="x", padx=16, pady=(0, 10))
+        else:
+            # Repo bulunamadı / Token uyarısı
+            err_text = self.repo_error or "Bağlı GitHub reposu bulunamadı."
+            warn_frame = ctk.CTkFrame(left_panel, fg_color="#3f1e1e", corner_radius=8)
+            warn_frame.pack(fill="x", padx=16, pady=(0, 10))
+
+            lbl_warn = ctk.CTkLabel(
+                warn_frame, text=f"⚠️ {err_text}",
+                text_color="#fca5a5", font=ctk.CTkFont(size=11),
+                wraplength=380, justify="left"
+            )
+            lbl_warn.pack(padx=12, pady=(8, 4), anchor="w")
+
+            btn_bind = ctk.CTkButton(
+                warn_frame, text="🔑 GitHub Token Gir ve Repoları Yükle",
+                height=30, fg_color="#4f46e5", hover_color="#4338ca",
+                command=self.open_github_token_dialog
+            )
+            btn_bind.pack(padx=12, pady=(0, 8), anchor="w")
+
+            self.combo_repo = ctk.CTkComboBox(
+                left_panel, values=["Repo yok - Önce token bağlayın"], height=36, state="disabled"
+            )
+            self.combo_repo.pack(fill="x", padx=16, pady=(0, 10))
 
         # 2. Branch Seçimi
         lbl_branch = ctk.CTkLabel(left_panel, text="2. Hedef Branch:", font=ctk.CTkFont(size=13, weight="bold"))
@@ -282,86 +343,91 @@ class GitPushDesktopApp(ctk.CTk):
         )
         self.btn_push.pack(fill="x", padx=16, pady=(0, 16))
 
-        # ─── Sağ Panel: Ekip Bildirim Alıcıları ─────
-        right_panel = ctk.CTkFrame(body, width=240, corner_radius=12)
-        right_panel.pack(side="right", fill="y", padx=(10, 0))
+        # ─── Sağ Panel: Bildirim Gönderilecekler ──────
+        right_panel = ctk.CTkFrame(body, width=280, corner_radius=12)
+        right_panel.pack(side="right", fill="both", expand=False)
         right_panel.pack_propagate(False)
 
-        lbl_team = ctk.CTkLabel(right_panel, text="🔔 Bildirim Alıcıları", font=ctk.CTkFont(size=13, weight="bold"))
-        lbl_team.pack(anchor="w", padx=14, pady=(16, 4))
+        lbl_team = ctk.CTkLabel(right_panel, text="🔔 Bildirim Alıcıları", font=ctk.CTkFont(size=14, weight="bold"))
+        lbl_team.pack(anchor="w", padx=16, pady=(16, 2))
 
         lbl_team_sub = ctk.CTkLabel(
-            right_panel, text="İşlem sonrası e-posta ve push alacak ekip üyeleri:",
-            font=ctk.CTkFont(size=11), text_color="gray", wraplength=210
+            right_panel, text="Push sonrası kime e-posta ve mobil bildirim gönderilsin?",
+            font=ctk.CTkFont(size=11), text_color="gray", wraplength=240, justify="left"
         )
-        lbl_team_sub.pack(anchor="w", padx=14, pady=(0, 10))
+        lbl_team_sub.pack(anchor="w", padx=16, pady=(0, 12))
 
-        scroll_team = ctk.CTkScrollableFrame(right_panel, fg_color="transparent")
-        scroll_team.pack(fill="both", expand=True, padx=6, pady=4)
+        # Kaydırılabilir Üye Listesi
+        scroll_members = ctk.CTkScrollableFrame(right_panel, fg_color="transparent")
+        scroll_members.pack(fill="both", expand=True, padx=8, pady=(0, 12))
 
+        self.selected_recipients.clear()
         if self.team_members:
             for member in self.team_members:
-                var = tk.BooleanVar(value=True)
-                self.selected_recipients.add(member["id"])
-
-                def _toggle(uid=member["id"], v=var):
-                    if v.get():
-                        self.selected_recipients.add(uid)
-                    else:
-                        self.selected_recipients.discard(uid)
+                m_id = member["id"]
+                m_name = member.get("name", "Üye")
+                m_role = member.get("role", "developer")
 
                 cb = ctk.CTkCheckBox(
-                    scroll_team,
-                    text=f"{member['name']}\n{member.get('role', 'dev')}",
-                    variable=var,
-                    command=_toggle,
-                    font=ctk.CTkFont(size=12)
+                    scroll_members,
+                    text=f"{m_name} ({m_role})",
+                    font=ctk.CTkFont(size=12),
+                    command=lambda uid=m_id: self.toggle_recipient(uid)
                 )
-                cb.pack(anchor="w", pady=6, padx=8)
+                cb.pack(anchor="w", padx=8, pady=6)
         else:
-            ctk.CTkLabel(scroll_team, text="Kayıtlı başka üye yok.", text_color="gray").pack(pady=20)
+            lbl_none = ctk.CTkLabel(scroll_members, text="Ekip üyesi bulunamadı.", font=ctk.CTkFont(size=12), text_color="gray")
+            lbl_none.pack(pady=20)
 
-        # İlk reponun branch'lerini otomatik yükle
-        if self.repos:
-            first_repo = self.repos[0]["full_name"]
-            self.combo_repo.set(first_repo)
-            self.on_repo_selected(first_repo)
-
-    def on_repo_selected(self, repo_full_name):
-        if not repo_full_name or "/" not in repo_full_name:
+    # ─── REPO & BRANCH SEÇİM METOTLARI ───────────────────────────────────────
+    def on_repo_selected(self, chosen_repo):
+        if not chosen_repo or "/" not in chosen_repo:
             return
+        owner, repo = chosen_repo.split("/")
+        self.combo_branch.configure(values=["Branch'ler yükleniyor..."])
+        self.combo_branch.set("Branch'ler yükleniyor...")
 
-        self.combo_branch.configure(values=["Yükleniyor..."])
-        self.combo_branch.set("Yükleniyor...")
-        owner, repo = repo_full_name.split("/")
-
-        def _fetch_b():
+        def _fetch_branches():
+            headers = self.get_auth_headers()
             try:
                 res = requests.get(
                     f"{self.api_url}/branches",
-                    headers=self.get_auth_headers(),
                     params={"owner": owner, "repo": repo},
+                    headers=headers,
                     timeout=10
                 )
                 if res.status_code == 200:
                     branches = res.json().get("branches", [])
                     if branches:
-                        self.after(0, lambda: self.update_branches_ui(branches))
+                        self.after(0, lambda b=branches: self.update_branch_combo(b, chosen_repo))
                     else:
-                        self.after(0, lambda: self.combo_branch.configure(values=["main"]))
-            except Exception:
-                self.after(0, lambda: self.combo_branch.configure(values=["main"]))
+                        self.after(0, lambda: self.combo_branch.configure(values=["İzinli branch bulunamadı"]))
+                        self.after(0, lambda: self.combo_branch.set("İzinli branch bulunamadı"))
+                else:
+                    self.after(0, lambda: self.combo_branch.configure(values=["Branch'ler alınamadı"]))
+                    self.after(0, lambda: self.combo_branch.set("Branch'ler alınamadı"))
+            except Exception as e:
+                self.after(0, lambda: self.combo_branch.configure(values=["Hata oluştu"]))
+                self.after(0, lambda: self.combo_branch.set("Hata oluştu"))
 
-        threading.Thread(target=_fetch_b, daemon=True).start()
+        threading.Thread(target=_fetch_branches, daemon=True).start()
 
-    def update_branches_ui(self, branches):
+    def update_branch_combo(self, branches, repo_name):
         self.combo_branch.configure(values=branches)
-        if "main" in branches:
-            self.combo_branch.set("main")
-        elif "master" in branches:
-            self.combo_branch.set("master")
+        # Varsayılan branch
+        selected_repo_data = next((r for r in self.repos if r.get("full_name") == repo_name), None)
+        def_branch = selected_repo_data.get("default_branch") if selected_repo_data else None
+
+        if def_branch and def_branch in branches:
+            self.combo_branch.set(def_branch)
         elif branches:
             self.combo_branch.set(branches[0])
+
+    def toggle_recipient(self, user_id):
+        if user_id in self.selected_recipients:
+            self.selected_recipients.remove(user_id)
+        else:
+            self.selected_recipients.add(user_id)
 
     def browse_file(self):
         f = filedialog.askopenfilename(title="GitHub'a Gönderilecek Dosyayı Seçin")
@@ -381,8 +447,8 @@ class GitPushDesktopApp(ctk.CTk):
         if not repo or "/" not in repo:
             messagebox.showwarning("Eksik Bilgi", "Lütfen geçerli bir repo seçin.")
             return
-        if not branch or branch in ["Yükleniyor...", "Önce repo seçin"]:
-            messagebox.showwarning("Eksik Bilgi", "Lütfen bir branch seçin.")
+        if not branch or branch in ["Yükleniyor...", "Önce repo seçin", "İzinli branch bulunamadı", "Branch'ler alınamadı"]:
+            messagebox.showwarning("Eksik Bilgi", "Lütfen geçerli bir branch seçin.")
             return
         if not self.selected_file_path or not os.path.exists(self.selected_file_path):
             messagebox.showwarning("Eksik Bilgi", "Lütfen yüklenecek bir dosya seçin.")
@@ -422,9 +488,9 @@ class GitPushDesktopApp(ctk.CTk):
                     self.after(0, lambda: self.push_success(resp_data))
                 else:
                     err = resp_data.get("message", "Push işlemi başarısız oldu.")
-                    self.after(0, lambda: self.push_fail(err))
+                    self.after(0, lambda m=err: self.push_fail(m))
             except Exception as e:
-                self.after(0, lambda: self.push_fail(str(e)))
+                self.after(0, lambda m=str(e): self.push_fail(m))
 
         threading.Thread(target=_do_push, daemon=True).start()
 
