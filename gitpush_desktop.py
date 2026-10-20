@@ -17,7 +17,7 @@ class GitPushDesktopApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("GitPush Desktop — Ekip Kolay Git Yükleme")
+        self.title("GitSüpar Desktop — Ekip Kolay Git Yükleme")
         self.geometry("780x620")
         self.minsize(700, 560)
 
@@ -87,7 +87,7 @@ class GitPushDesktopApp(ctk.CTk):
         frame = ctk.CTkFrame(self.main_container, width=420, corner_radius=16)
         frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        title = ctk.CTkLabel(frame, text="🚀 GitPush Desktop", font=ctk.CTkFont(size=24, weight="bold"))
+        title = ctk.CTkLabel(frame, text="🚀 GitSüpar Desktop", font=ctk.CTkFont(size=24, weight="bold"))
         title.pack(pady=(28, 4), padx=30)
 
         subtitle = ctk.CTkLabel(frame, text="Hesabınıza giriş yapın", font=ctk.CTkFont(size=13), text_color="gray")
@@ -204,7 +204,7 @@ class GitPushDesktopApp(ctk.CTk):
 
         lbl_user = ctk.CTkLabel(
             header,
-            text=f"🚀 GitPush Panel — {u_name} {gh_badge}",
+            text=f"🚀 GitSüpar — {u_name} {gh_badge}",
             font=ctk.CTkFont(size=15, weight="bold")
         )
         lbl_user.pack(side="left", padx=20, pady=15)

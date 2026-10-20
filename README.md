@@ -1,4 +1,4 @@
-# 🚀 SuparGit Desktop
+# 🚀 GitSüpar Desktop
 
 Ekip için kolay GitHub dosya yükleme ve anlık bildirim istemcisi (Windows Masaüstü Uygulaması).
 
@@ -10,7 +10,7 @@ Ekip için kolay GitHub dosya yükleme ve anlık bildirim istemcisi (Windows Mas
 - ⚡ Bağımsız `.exe` olarak kurulum gerektirmeden çalışabilme.
 
 ## 📥 İndirme ve Çalıştırma
-Doğrudan kullanmak için bu repodaki **`GitPush.exe`** dosyasını indirip çalıştırmanız yeterlidir (Python kurulumu gerektirmez).
+Doğrudan kullanmak için bu repodaki **`GitSupar.exe`** dosyasını indirip çalıştırmanız yeterlidir (Python kurulumu gerektirmez).
 
 ## 🛠️ Kaynak Koddan Çalıştırma
 ```bash
