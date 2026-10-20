@@ -327,19 +327,19 @@ class ApiController extends Controller
         $platform = $request->query('platform');
 
         $desktop = [
-            'version' => '1.0.2',
-            'version_code' => 3,
+            'version' => '1.0.3',
+            'version_code' => 4,
             'download_url' => url('/downloads/GitSupar.exe'),
             'setup_download_url' => url('/downloads/GitSupar-Setup.exe'),
-            'release_notes' => "• Bildirim alıcıları varsayılan olarak seçili hale getirildi\n• Sadeleştirilmiş başlık ve sol alt köşe sürüm bilgisi\n• Otomatik güncelleme ve performans geliştirmeleri",
+            'release_notes' => "• Yeni GitSüpar kurumsal uygulama logosu eklendi\n• Masaüstü ve bildirim simgeleri yenilendi\n• Performans ve arayüz iyileştirmeleri",
             'force_update' => false,
         ];
 
         $android = [
-            'version' => '1.0.1',
-            'version_code' => 2,
+            'version' => '1.0.2',
+            'version_code' => 3,
             'download_url' => url('/downloads/GitSupar.apk'),
-            'release_notes' => "• Profil ve hesap düzenleme sekmesi\n• Yeni branch izinleri entegrasyonu\n• Otomatik güncelleme kontrolü",
+            'release_notes' => "• Yeni GitSüpar kurumsal uygulama simgesi eklendi\n• Arayüz ve performans iyileştirmeleri",
             'force_update' => false,
         ];
 
