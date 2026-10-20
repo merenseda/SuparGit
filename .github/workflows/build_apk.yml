@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ mobile, main, master ]
   workflow_dispatch:
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GitPush-Release-APK
+          name: GitSupar-Release-APK
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Create GitHub Release
