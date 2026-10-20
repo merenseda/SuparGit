@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text('🚀', style: TextStyle(fontSize: 54)),
               const SizedBox(height: 12),
               const Text(
-                'GitPush Mobile',
+                'GitSüpar',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 26,

@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        title: const Text('🚀 GitPush Ekip Akışı', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('🚀 GitSüpar Ekip Akışı', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: const Color(0xFF1E293B),
         elevation: 0,
         actions: [

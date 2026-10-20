@@ -56,7 +56,7 @@ void main() async {
           const NotificationDetails(
             android: AndroidNotificationDetails(
               'gitpush_channel',
-              'GitPush Bildirimleri',
+              'GitSüpar Bildirimleri',
               importance: Importance.max,
               priority: Priority.high,
             ),
@@ -69,17 +69,17 @@ void main() async {
   }
 
   final token = await ApiService.getToken();
-  runApp(GitPushMobileApp(initialRoute: token != null ? '/home' : '/login'));
+  runApp(GitSuparMobileApp(initialRoute: token != null ? '/home' : '/login'));
 }
 
-class GitPushMobileApp extends StatelessWidget {
+class GitSuparMobileApp extends StatelessWidget {
   final String initialRoute;
-  const GitPushMobileApp({super.key, required this.initialRoute});
+  const GitSuparMobileApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GitPush Mobile',
+      title: 'GitSüpar',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
