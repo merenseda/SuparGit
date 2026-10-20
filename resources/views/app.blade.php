@@ -12,9 +12,10 @@
 
         <title inertia>{{ config('app.name', 'GitSüpar') }}</title>
 
-        <!-- PWA Manifest -->
+        <!-- Favicon & PWA Icons -->
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
         <link rel="manifest" href="/manifest.json">
-        <link rel="apple-touch-icon" href="/icon-192x192.png">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

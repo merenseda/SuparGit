@@ -27,7 +27,7 @@ const isAdmin = page.props.auth?.user?.role === 'admin';
     <aside :class="['fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transform transition-transform duration-300 lg:translate-x-0 lg:static flex flex-col', sidebarOpen ? 'translate-x-0' : '-translate-x-full']">
       <!-- Logo -->
       <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-800">
-        <span class="text-2xl">🚀</span>
+        <img src="/icon-192x192.png" alt="GitSüpar Logo" class="w-8 h-8 rounded-lg shadow-sm" />
         <span class="text-xl font-bold text-white tracking-wide">GitSüpar</span>
       </div>
       
