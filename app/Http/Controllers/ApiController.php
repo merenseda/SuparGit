@@ -330,6 +330,7 @@ class ApiController extends Controller
             'version' => '1.0.1',
             'version_code' => 2,
             'download_url' => url('/downloads/GitSupar.exe'),
+            'setup_download_url' => url('/downloads/GitSupar-Setup.exe'),
             'release_notes' => "• Yeni branch izinleri ve güvenlik kontrolleri\n• GitHub token hızlı yenileme ve bağlantı sihirbazı\n• Otomatik güncelleme desteği",
             'force_update' => false,
         ];
