@@ -318,4 +318,42 @@ class ApiController extends Controller
 
         return response()->json(['success' => true, 'message' => 'FCM token güncellendi.']);
     }
+
+    /**
+     * Uygulama Sürüm Bilgisi ve Güncelleme Kontrolü (Desktop & Android)
+     */
+    public function appVersion(Request $request): JsonResponse
+    {
+        $platform = $request->query('platform');
+
+        $desktop = [
+            'version' => '1.0.1',
+            'version_code' => 2,
+            'download_url' => url('/downloads/GitSupar.exe'),
+            'release_notes' => "• Yeni branch izinleri ve güvenlik kontrolleri\n• GitHub token hızlı yenileme ve bağlantı sihirbazı\n• Otomatik güncelleme desteği",
+            'force_update' => false,
+        ];
+
+        $android = [
+            'version' => '1.0.1',
+            'version_code' => 2,
+            'download_url' => url('/downloads/GitSupar.apk'),
+            'release_notes' => "• Profil ve hesap düzenleme sekmesi\n• Yeni branch izinleri entegrasyonu\n• Otomatik güncelleme kontrolü",
+            'force_update' => false,
+        ];
+
+        if ($platform === 'desktop') {
+            return response()->json(['success' => true, 'data' => $desktop]);
+        }
+
+        if ($platform === 'android') {
+            return response()->json(['success' => true, 'data' => $android]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'desktop' => $desktop,
+            'android' => $android,
+        ]);
+    }
 }

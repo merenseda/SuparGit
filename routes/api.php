@@ -3,8 +3,9 @@
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Route;
 
-// ─── Kimlik Doğrulama ───────────────────────────────────────────────────────
+// ─── Kimlik Doğrulama & Genel Uç Noktalar ──────────────────────────────────
 Route::post('/login', [ApiController::class, 'login']);
+Route::get('/app-version', [ApiController::class, 'appVersion']);
 
 // ─── Korumalı API Rotaları (Sanctum Token ile) ──────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
