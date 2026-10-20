@@ -6,8 +6,7 @@ const page = usePage();
 const sidebarOpen = ref(false);
 
 const navigation = [
-  { name: 'Gösterge Paneli', href: '/dashboard', icon: '🏠' },
-  { name: 'Push Geçmişi', href: '/push/logs', icon: '📜' },
+  { name: 'Gösterge Paneli', href: '/dashboard', icon: '📜' },
   { name: 'Hesap / Profil', href: '/profile', icon: '👤' },
 ];
 

@@ -8,26 +8,48 @@ use App\Http\Controllers\PushController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// ─── Ana Sayfa ─────────────────────────────────────────────────────────────
+// ─── Ana Sayfa (Giriş yapılmışsa doğrudan Gösterge Paneline yönlendir) ──────
 Route::get('/', function () {
-    return Inertia::render('Welcome');
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
 })->name('home');
 
-// ─── Dashboard (Genel Özet) ─────────────────────────────────────────────────
+// ─── Dashboard (Genel Gösterge Paneli: Push Geçmişi) ──────────────────────────
 Route::get('/dashboard', function () {
+    $query = \App\Models\PushLog::with('user')->latest();
+
+    $logs = $query->paginate(20)->through(fn($log) => [
+        'id' => $log->id,
+        'user' => [
+            'name' => $log->user?->name ?? 'Bilinmeyen Üye',
+            'github_username' => $log->user?->github_username,
+            'github_avatar' => $log->user?->github_avatar,
+        ],
+        'repo_full_name' => $log->repo_full_name,
+        'repo_name' => $log->repo_name,
+        'branch' => $log->branch,
+        'original_filename' => $log->original_filename,
+        'file_path' => $log->file_path,
+        'commit_message' => $log->commit_message,
+        'commit_sha' => substr($log->commit_sha ?? '', 0, 7),
+        'diff_url' => $log->diff_url,
+        'file_url' => $log->file_url,
+        'status' => $log->status,
+        'created_at' => $log->created_at->diffForHumans(),
+        'date' => $log->created_at->format('d.m.Y H:i'),
+    ]);
+
+    $stats = [
+        'total' => \App\Models\PushLog::count(),
+        'success' => \App\Models\PushLog::where('status', 'success')->count(),
+        'failed' => \App\Models\PushLog::where('status', 'failed')->count(),
+    ];
+
     return Inertia::render('Dashboard', [
-        'recentLogs' => \App\Models\PushLog::with('user')
-            ->latest()
-            ->limit(5)
-            ->get()
-            ->map(fn($log) => [
-                'id' => $log->id,
-                'user_name' => $log->user->name,
-                'repo_name' => $log->repo_name,
-                'commit_message' => $log->commit_message,
-                'status' => $log->status,
-                'created_at' => $log->created_at->diffForHumans(),
-            ]),
+        'logs' => $logs,
+        'stats' => $stats,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -49,8 +71,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/push', fn() => abort(403, 'Dosya push işlemleri yalnızca Masaüstü Uygulaması üzerinden yapılabilir.'))->name('push.store');
     Route::get('/push/branches', [PushController::class, 'getBranches'])->name('push.branches');
 
-    // Push Logları (Herkese açık - viewer da görebilir)
-    Route::get('/push/logs', [PushController::class, 'logs'])->name('push.logs');
+    // Push Logları (Gösterge Paneline yönlendirilir)
+    Route::get('/push/logs', fn() => redirect()->route('dashboard'))->name('push.logs');
     Route::get('/push/logs/{pushLog}', [PushController::class, 'show'])->name('push.logs.show');
 
     // FCM Token
