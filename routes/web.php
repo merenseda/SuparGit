@@ -87,7 +87,7 @@ Route::middleware('auth')->group(function () {
     })->name('api.users');
 
     // Admin Rotaları
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware(\App\Http\Middleware\AdminMiddleware::class)->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.role');
