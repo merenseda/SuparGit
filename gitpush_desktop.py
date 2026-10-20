@@ -9,6 +9,8 @@ from tkinter import filedialog, messagebox
 # ─── AYARLAR & SABİTLER ───────────────────────────────────────────────────────
 DEFAULT_API_URL = "https://git.susluparantez.com.tr/api"
 CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".gitpush_config.json")
+APP_VERSION = "1.0.1"
+APP_VERSION_CODE = 2
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -17,9 +19,9 @@ class GitPushDesktopApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("GitSüpar Desktop — Ekip Kolay Git Yükleme")
-        self.geometry("820x640")
-        self.minsize(720, 580)
+        self.title(f"GitSüpar Desktop v{APP_VERSION} — Ekip Kolay Git Yükleme")
+        self.geometry("860x650")
+        self.minsize(740, 580)
 
         self.api_url = DEFAULT_API_URL
         self.auth_token = None
@@ -33,6 +35,9 @@ class GitPushDesktopApp(ctk.CTk):
 
         self.load_local_config()
         self.create_widgets()
+
+        # Otomatik Güncelleme Kontrolü
+        self.check_for_updates(silent=True)
 
         if self.auth_token:
             self.fetch_initial_data()
@@ -77,6 +82,136 @@ class GitPushDesktopApp(ctk.CTk):
     def clear_container(self):
         for widget in self.main_container.winfo_children():
             widget.destroy()
+
+    # ─── OTOMATİK GÜNCELLEME SİSTEMİ ─────────────────────────────────────────
+    def check_for_updates(self, silent=True):
+        def _check():
+            try:
+                res = requests.get(f"{self.api_url}/app-version?platform=desktop", timeout=6)
+                if res.status_code == 200:
+                    data = res.json().get("data", {})
+                    server_code = data.get("version_code", 1)
+                    if server_code > APP_VERSION_CODE:
+                        self.after(0, lambda d=data: self.show_update_dialog(d))
+                    elif not silent:
+                        self.after(0, lambda: messagebox.showinfo("Güncel", f"Uygulamanız en son sürümde (v{APP_VERSION})."))
+            except Exception as e:
+                if not silent:
+                    self.after(0, lambda err=str(e): messagebox.showerror("Hata", f"Güncelleme kontrolü başarısız:\n{err}"))
+
+        threading.Thread(target=_check, daemon=True).start()
+
+    def show_update_dialog(self, data):
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("🚀 Yeni Güncelleme Mevcut!")
+        dialog.geometry("480x380")
+        dialog.resizable(False, False)
+        dialog.transient(self)
+        dialog.grab_set()
+
+        lbl_title = ctk.CTkLabel(
+            dialog,
+            text=f"🚀 GitSüpar v{data.get('version')} Yayında!",
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        lbl_title.pack(pady=(20, 6), padx=20)
+
+        lbl_curr = ctk.CTkLabel(
+            dialog,
+            text=f"Mevcut: v{APP_VERSION}  →  Yeni: v{data.get('version')}",
+            font=ctk.CTkFont(size=12),
+            text_color="#94a3b8"
+        )
+        lbl_curr.pack(pady=(0, 10))
+
+        notes_box = ctk.CTkTextbox(dialog, height=90, font=ctk.CTkFont(size=11))
+        notes_box.pack(fill="x", padx=24, pady=(0, 10))
+        notes_box.insert("1.0", "Yenilikler:\n" + data.get("release_notes", "Performans ve hata düzeltmeleri."))
+        notes_box.configure(state="disabled")
+
+        lbl_status = ctk.CTkLabel(dialog, text="Program otomatik indirilip kendini güncelleyecektir.", font=ctk.CTkFont(size=11), text_color="#cbd5e1")
+        lbl_status.pack(pady=(0, 6), padx=24)
+
+        prog_bar = ctk.CTkProgressBar(dialog, height=10)
+        prog_bar.set(0)
+
+        btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        btn_frame.pack(fill="x", padx=24, pady=12)
+
+        btn_cancel = ctk.CTkButton(
+            btn_frame, text="Daha Sonra", width=100, height=36,
+            fg_color="#374151", hover_color="#4b5563",
+            command=dialog.destroy
+        )
+        btn_cancel.pack(side="left")
+
+        def start_download():
+            btn_cancel.configure(state="disabled")
+            btn_update.configure(state="disabled", text="İndiriliyor...")
+            prog_bar.pack(fill="x", padx=24, pady=(0, 10))
+
+            def _download_thread():
+                import tempfile, subprocess
+                download_url = data.get("download_url")
+                temp_dir = tempfile.gettempdir()
+                temp_new_exe = os.path.join(temp_dir, "GitSupar_new.exe")
+                try:
+                    r = requests.get(download_url, stream=True, timeout=90)
+                    total_len = int(r.headers.get("content-length", 0))
+                    downloaded = 0
+                    with open(temp_new_exe, "wb") as f:
+                        for chunk in r.iter_content(chunk_size=65536):
+                            if chunk:
+                                f.write(chunk)
+                                downloaded += len(chunk)
+                                if total_len > 0:
+                                    pct = downloaded / total_len
+                                    mb_done = downloaded / (1024 * 1024)
+                                    mb_total = total_len / (1024 * 1024)
+                                    self.after(0, lambda p=pct, d=mb_done, t=mb_total: (
+                                        prog_bar.set(p),
+                                        lbl_status.configure(text=f"İndiriliyor: %{int(p*100)} ({d:.1f} / {t:.1f} MB)")
+                                    ))
+
+                    self.after(0, lambda: lbl_status.configure(text="İndirme tamamlandı! Uygulama güncelleniyor..."))
+
+                    is_frozen = getattr(sys, 'frozen', False)
+                    target_exe = sys.executable if is_frozen else os.path.abspath("GitSupar.exe")
+
+                    bat_path = os.path.join(temp_dir, "gitsupar_updater.bat")
+                    bat_content = f"""@echo off
+timeout /t 1 /nobreak > NUL
+:retry
+move /Y "{temp_new_exe}" "{target_exe}" > NUL 2>&1
+if errorlevel 1 (
+    timeout /t 1 /nobreak > NUL
+    goto retry
+)
+start "" "{target_exe}"
+del "%~f0"
+"""
+                    with open(bat_path, "w", encoding="utf-8") as bf:
+                        bf.write(bat_content)
+
+                    # Arka planda penceresiz çalıştır ve hemen çık
+                    subprocess.Popen(["cmd.exe", "/c", bat_path], creationflags=0x08000000)
+                    os._exit(0)
+
+                except Exception as e:
+                    self.after(0, lambda err=str(e): (
+                        messagebox.showerror("Güncelleme Hatası", f"İndirme sırasında hata oluştu:\n{err}"),
+                        btn_cancel.configure(state="normal"),
+                        btn_update.configure(state="normal", text="Tekrar Dene")
+                    ))
+
+            threading.Thread(target=_download_thread, daemon=True).start()
+
+        btn_update = ctk.CTkButton(
+            btn_frame, text="Şimdi Güncelle 🚀", width=160, height=36,
+            fg_color="#4f46e5", hover_color="#4338ca",
+            command=start_download
+        )
+        btn_update.pack(side="right")
 
     # ─── GİRİŞ EKRANI ────────────────────────────────────────────────────────
     def show_login_frame(self):
@@ -232,25 +367,32 @@ class GitPushDesktopApp(ctk.CTk):
 
         # Sağ Butonlar
         btn_logout = ctk.CTkButton(
-            header, text="Çıkış", width=65, height=32,
+            header, text="Çıkış", width=60, height=32,
             fg_color="#dc2626", hover_color="#b91c1c",
             command=self.logout
         )
-        btn_logout.pack(side="right", padx=(6, 20))
+        btn_logout.pack(side="right", padx=(4, 16))
+
+        btn_update = ctk.CTkButton(
+            header, text="✨ Güncelleme", width=95, height=32,
+            fg_color="#059669", hover_color="#047857",
+            command=lambda: self.check_for_updates(silent=False)
+        )
+        btn_update.pack(side="right", padx=4)
 
         btn_refresh = ctk.CTkButton(
-            header, text="🔄 Yenile", width=75, height=32,
+            header, text="🔄 Yenile", width=70, height=32,
             fg_color="#374151", hover_color="#4b5563",
             command=self.fetch_initial_data
         )
-        btn_refresh.pack(side="right", padx=6)
+        btn_refresh.pack(side="right", padx=4)
 
         btn_gh = ctk.CTkButton(
-            header, text="🔑 GitHub Token", width=110, height=32,
+            header, text="🔑 Token", width=80, height=32,
             fg_color="#4f46e5", hover_color="#4338ca",
             command=self.open_github_token_dialog
         )
-        btn_gh.pack(side="right", padx=6)
+        btn_gh.pack(side="right", padx=4)
 
         # Ana Gövde (Sol Form + Sağ Bildirim Listesi)
         body = ctk.CTkFrame(self.main_container, fg_color="transparent")
@@ -357,7 +499,6 @@ class GitPushDesktopApp(ctk.CTk):
         )
         lbl_team_sub.pack(anchor="w", padx=16, pady=(0, 12))
 
-        # Kaydırılabilir Üye Listesi
         scroll_members = ctk.CTkScrollableFrame(right_panel, fg_color="transparent")
         scroll_members.pack(fill="both", expand=True, padx=8, pady=(0, 12))
 
@@ -414,7 +555,6 @@ class GitPushDesktopApp(ctk.CTk):
 
     def update_branch_combo(self, branches, repo_name):
         self.combo_branch.configure(values=branches)
-        # Varsayılan branch
         selected_repo_data = next((r for r in self.repos if r.get("full_name") == repo_name), None)
         def_branch = selected_repo_data.get("default_branch") if selected_repo_data else None
 
