@@ -8,9 +8,9 @@
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <meta name="apple-mobile-web-app-title" content="GitPush Panel">
+        <meta name="apple-mobile-web-app-title" content="GitSüpar">
 
-        <title inertia>{{ config('app.name', 'GitPush Panel') }}</title>
+        <title inertia>{{ config('app.name', 'GitSüpar') }}</title>
 
         <!-- PWA Manifest -->
         <link rel="manifest" href="/manifest.json">

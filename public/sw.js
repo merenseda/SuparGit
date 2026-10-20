@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gitpush-panel-v1';
+const CACHE_NAME = 'gitsupar-v1';
 const urlsToCache = [
   '/',
   '/dashboard',
@@ -23,7 +23,7 @@ self.addEventListener('activate', (event) => {
 
 // Push notification alma (Arka plan bildirimleri)
 self.addEventListener('push', (event) => {
-  let data = { title: 'GitPush Panel', body: 'Yeni bir push işlemi yapıldı.', icon: '/icon-192x192.png' };
+  let data = { title: 'GitSüpar', body: 'Yeni bir push işlemi yapıldı.', icon: '/icon-192x192.png' };
   if (event.data) {
     try { 
       data = event.data.json(); 
@@ -33,7 +33,7 @@ self.addEventListener('push', (event) => {
   }
   
   event.waitUntil(
-    self.registration.showNotification(data.title || 'GitPush Panel', {
+    self.registration.showNotification(data.title || 'GitSüpar', {
       body: data.body,
       icon: data.icon || '/icon-192x192.png',
       badge: '/icon-192x192.png',

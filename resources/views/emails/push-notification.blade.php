@@ -51,7 +51,7 @@
     @endif
   </div>
   <div class="footer">
-    Bu bildirim GitPush Panel tarafından otomatik gönderilmiştir.<br>
+    Bu bildirim GitSüpar tarafından otomatik gönderilmiştir.<br>
     Bildirim almak istemiyorsanız profil ayarlarınızdan devre dışı bırakabilirsiniz.
   </div>
 </div>

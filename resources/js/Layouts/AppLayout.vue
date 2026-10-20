@@ -29,7 +29,7 @@ const isAdmin = page.props.auth?.user?.role === 'admin';
       <!-- Logo -->
       <div class="flex items-center gap-3 px-6 py-5 border-b border-gray-800">
         <span class="text-2xl">🚀</span>
-        <span class="text-xl font-bold text-white tracking-wide">GitPush Panel</span>
+        <span class="text-xl font-bold text-white tracking-wide">GitSüpar</span>
       </div>
       
       <!-- Kullanıcı Bilgisi -->
@@ -126,7 +126,7 @@ const isAdmin = page.props.auth?.user?.role === 'admin';
       
       <!-- Footer -->
       <footer class="px-6 py-4 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-400">
-        GitPush Panel &copy; {{ new Date().getFullYear() }} — Ekip için GitHub & Bildirim Dağıtım Sistemi
+        GitSüpar &copy; {{ new Date().getFullYear() }} — Ekip için GitHub & Bildirim Dağıtım Sistemi
       </footer>
     </div>
   </div>

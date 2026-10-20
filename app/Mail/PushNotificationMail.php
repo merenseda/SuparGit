@@ -18,7 +18,7 @@ class PushNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🚀 [GitPush] ' . $this->pushLog->user->name . ' → ' . $this->pushLog->repo_name,
+            subject: '🚀 [GitSüpar] ' . $this->pushLog->user->name . ' → ' . $this->pushLog->repo_name,
         );
     }
 

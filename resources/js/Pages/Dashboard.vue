@@ -18,7 +18,7 @@ const statusBadge = (status) => status === 'success'
     <div class="space-y-6 max-w-6xl">
       <!-- Karşılama Kartı -->
       <div class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl p-6 md:p-8 text-white shadow-lg">
-        <h2 class="text-2xl md:text-3xl font-extrabold mb-2 tracking-tight">🚀 GitPush Panel'e Hoş Geldiniz!</h2>
+        <h2 class="text-2xl md:text-3xl font-extrabold mb-2 tracking-tight">🚀 GitSüpar'a Hoş Geldiniz!</h2>
         <p class="text-indigo-100 text-sm md:text-base max-w-2xl leading-relaxed">
           GitHub repolarınıza dosyalarınızı tek tıkla yükleyin, anında ekip arkadaşlarınıza otomatik e-posta ve mobil bildirim gönderin.
         </p>

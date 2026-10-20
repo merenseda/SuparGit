@@ -1,6 +1,6 @@
 {
-  "name": "GitPush Panel",
-  "short_name": "GitPush",
+  "name": "GitSüpar",
+  "short_name": "GitSüpar",
   "description": "Ekip içi hızlı GitHub dosya dağıtım ve bildirim sistemi",
   "start_url": "/dashboard",
   "display": "standalone",
